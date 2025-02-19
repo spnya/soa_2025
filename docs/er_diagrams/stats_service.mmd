@@ -1,0 +1,23 @@
+erDiagram
+    POSTS ||--|{ POST_VIEWS : "просматривается"
+    POSTS ||--|{ POST_LIKES_STATS : "получает лайки"
+    POSTS ||--|{ POST_COMMENTS_STATS : "получает комментарии"
+
+    POST_VIEWS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime timestamp
+    }
+    
+    POST_LIKES_STATS {
+        int post_id PK
+        int likes_count
+        datetime updated_at
+    }
+    
+    POST_COMMENTS_STATS {
+        int post_id PK
+        int comments_count
+        datetime updated_at
+    }
