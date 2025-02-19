@@ -1,0 +1,114 @@
+specification {
+  element actor
+  element system
+  element component
+  element database
+}
+
+model {
+  user = actor 'Пользователь' {
+    description 'Создает посты, ставит лайки и комментирует'
+  }
+
+  social_network = system 'Социальная сеть' {
+    
+    frontend = component 'Frontend' {
+      description 'Веб-приложение для пользователей'
+      style {
+        icon tech:nextjs
+        shape browser
+      }
+    }
+
+    nginx = component 'Nginx' {
+      description 'Маршрутизирует HTTP-запросы'
+      style {
+        icon tech:nginx
+      }
+    }
+
+    api_gateway = component 'API Gateway' {
+      description 'Принимает REST API-запросы и направляет их'
+      style {
+        icon tech:fastapi
+      }
+    }
+
+    users_service = component 'Users Service' {
+      description 'Регистрация, аутентификация, хранение профилей'
+      style {
+        icon tech:fastapi
+      }
+    }
+
+    posts_service = component 'Posts Service' {
+      description 'Создание постов, лайков и комментариев'
+      style {
+        icon tech:fastapi
+      }
+    }
+
+    stats_service = component 'Stats Service' {
+      description 'Аналитика, подсчет лайков, просмотров и комментариев'
+      style {
+        icon tech:fastapi
+      }
+    }
+
+    message_broker = component 'Kafka' {
+      description 'Брокер сообщений для передачи событий'
+      style {
+        icon tech:kafka
+      }
+    }
+
+    postgres_db = database 'PostgreSQL' {
+      description 'Хранение пользователей, постов и комментариев'
+      style {
+        icon tech:postgresql
+      }
+    }
+
+    clickhouse_db = database 'ClickHouse' {
+      description 'Хранение статистики'
+      style {
+        icon tech:clickhouse
+      }
+    }
+
+    frontend -> nginx 'Отправляет API-запросы'
+    nginx -> api_gateway 'Маршрутизация API-запросов'
+    api_gateway -> users_service 'Регистрация и аутентификация'
+    api_gateway -> posts_service 'Создание постов и комментариев'
+    api_gateway -> stats_service 'Запрос статистики'
+    
+    posts_service -> message_broker 'Отправка событий (лайки, просмотры)'
+    api_gateway -> message_broker 'Отправка событий в Kafka'
+    message_broker -> stats_service 'Передача событий аналитики'
+    
+    users_service -> postgres_db 'Хранение пользователей'
+    posts_service -> postgres_db 'Хранение постов и комментариев'
+    stats_service -> clickhouse_db 'Сохранение статистики'
+  }
+
+  user -> frontend 'Использует веб-приложение'
+}
+
+views {
+  view index {
+    title 'Архитектура социальной сети'
+
+    include *
+  }
+
+  view social_network of social_network {
+    include *
+
+    style * {
+      opacity 25%
+    }
+    style user {
+      color muted
+    }
+  }
+}

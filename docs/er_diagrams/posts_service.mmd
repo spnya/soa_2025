@@ -1,0 +1,29 @@
+erDiagram
+    USERS ||--|{ POSTS : "публикует"
+    USERS ||--|{ COMMENTS : "оставляет"
+    USERS ||--|{ LIKES : "ставит"
+
+    POSTS {
+        int id PK
+        int user_id FK
+        string text
+        string image_url
+        datetime created_at
+        datetime updated_at
+    }
+    
+    COMMENTS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        int parent_comment_id FK "nullable"
+        string text
+        datetime created_at
+    }
+    
+    LIKES {
+        int id PK
+        int post_id FK
+        int user_id FK
+        datetime created_at
+    }
