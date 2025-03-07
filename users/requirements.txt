@@ -1,0 +1,11 @@
+flask
+flask-sqlalchemy
+psycopg2-binary
+marshmallow
+email-validator
+flask-cors
+pyjwt
+bcrypt
+flask-restful
+pytest
+werkzeug
