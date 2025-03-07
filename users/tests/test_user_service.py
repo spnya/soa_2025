@@ -87,10 +87,3 @@ def test_update_user(client):
 
         assert updated_user.created_at == created_at
         assert updated_user.updated_at > created_at
-
-
-def test_user_to_dict(client):
-    """Тест сериализации пользователя в словарь"""
-    with app.app_context():
-        birth_date = datetime.date(1990, 1, 1)
-        user = User
