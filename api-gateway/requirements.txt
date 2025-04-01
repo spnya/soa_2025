@@ -7,3 +7,7 @@ flask-restful
 werkzeug
 flask-swagger-ui
 pyyaml
+grpcio
+grpcio-tools
+protobuf
+marshmallow

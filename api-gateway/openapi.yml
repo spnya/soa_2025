@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: User Authentication and Registration API
-  description: API для регистрации и аутентификации пользователей
+  title: Social Network API
+  description: API для социальной сети с управлением пользователями и постами
   version: 1.0.0
 
 servers:
@@ -10,7 +10,10 @@ servers:
 
 paths:
   /api/users/register:
+
     post:
+      tags:
+      - auth
       summary: Регистрация нового пользователя
       description: Создание нового пользователя с логином, паролем и электронной почтой
       requestBody:
@@ -41,6 +44,8 @@ paths:
 
   /api/users/login:
     post:
+      tags:
+      - auth
       summary: Аутентификация пользователя
       description: Аутентификация по логину и паролю
       requestBody:
@@ -64,7 +69,10 @@ paths:
                 $ref: '#/components/schemas/Error'
 
   /api/users/profile:
+
     get:
+      tags:
+        - profile
       summary: Получение профиля пользователя
       description: Получение всех данных профиля текущего пользователя
       security:
@@ -84,6 +92,8 @@ paths:
                 $ref: '#/components/schemas/Error'
 
     put:
+      tags:
+        - profile
       summary: Обновление профиля пользователя
       description: Обновление данных профиля текущего пользователя
       security:
@@ -109,6 +119,228 @@ paths:
                 $ref: '#/components/schemas/Error'
         '401':
           description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/posts:
+    post:
+      tags:
+        - posts
+      summary: Создание поста
+      description: Создание нового поста пользователем
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '201':
+          description: Пост успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Некорректный ввод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - posts
+      summary: Получение списка постов
+      description: Получение пагинированного списка постов
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Количество постов на странице
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: tag
+          in: query
+          description: Фильтр по тегу
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список постов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostList'
+        '400':
+          description: Некорректный ввод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/posts/{post_id}:
+    get:
+      tags:
+        - posts
+      summary: Получение поста по ID
+      description: Получение детальной информации о посте
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Информация о посте
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - posts
+      summary: Обновление поста
+      description: Обновление информации о посте
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdate'
+      responses:
+        '200':
+          description: Пост успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Некорректный ввод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - posts
+      summary: Удаление поста
+      description: Удаление поста по ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пост успешно удален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Post deleted successfully"
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
           content:
             application/json:
               schema:
@@ -252,6 +484,99 @@ components:
           format: email
           example: john.doe@example.com
 
+    PostCreate:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          example: "My First Post"
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          example: "This is the content of my first post in the social network."
+        is_private:
+          type: boolean
+          default: false
+          example: false
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["social", "first-post"]
+
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Updated Post Title"
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          example: "Updated content of my post."
+        is_private:
+          type: boolean
+          example: true
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["updated", "social"]
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "My First Post"
+        description:
+          type: string
+          example: "This is the content of my first post in the social network."
+        user_id:
+          type: integer
+          example: 1
+        is_private:
+          type: boolean
+          example: false
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["social", "first-post"]
+        created_at:
+          type: string
+          format: date-time
+          example: '2023-03-29T12:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          example: '2023-03-29T12:00:00Z'
+
+    PostList:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        total_count:
+          type: integer
+          example: 42
+        page:
+          type: integer
+          example: 1
+        total_pages:
+          type: integer
+          example: 5
+
     Error:
       type: object
       properties:
@@ -260,4 +585,4 @@ components:
           example: 'Некорректный ввод'
         details:
           type: object
-          example: {"username": "Это поле обязательно"}
+          example: {"title": "Это поле обязательно"}
