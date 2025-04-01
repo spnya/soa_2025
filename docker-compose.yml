@@ -6,10 +6,23 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=user_service
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-posts:
+    image: postgres:16
+    container_name: posts-db
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=posts_service
+    volumes:
+      - postgres_posts_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -26,16 +39,32 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/user_service
       - JWT_SECRET_KEY=your_super_secret_key_change_in_production
 
+  posts-service:
+    build: ./posts
+    container_name: posts-service
+    depends_on:
+      postgres-posts:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-posts:5432/posts_service
+      - GRPC_PORT=50051
+    ports:
+      - "50051:50051"
+
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
     depends_on:
       - user-service
+      - posts-service
     environment:
       - USER_SERVICE_URL=http://user-service:5000
+      - POSTS_SERVICE_URL=posts-service
+      - POSTS_SERVICE_PORT=50051
       - JWT_SECRET_KEY=your_super_secret_key_change_in_production
     ports:
       - "8000:8000"
 
 volumes:
   postgres_data:
+  postgres_posts_data:

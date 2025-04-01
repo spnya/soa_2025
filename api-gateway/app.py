@@ -4,6 +4,7 @@ import os
 from config import Config
 import yaml
 from flask_swagger_ui import get_swaggerui_blueprint
+from routes.posts_routes import posts_blueprint
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -18,20 +19,21 @@ swaggerui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,
     '/api/spec',
     config={
-        'app_name': "User Authentication API"
+        'app_name': "API Gateway"
     }
 )
 
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+app.register_blueprint(posts_blueprint, url_prefix='/api')
 
 @app.route('/api/spec')
 def get_spec():
     return jsonify(api_spec)
 
-@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def proxy(path):
+@app.route('/api/users/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def proxy_users(path):
     user_service_url = app.config['USER_SERVICE_URL']
-    url = f"{user_service_url}/{path}"
+    url = f"{user_service_url}/api/users/{path}"
 
     resp = requests.request(
         method=request.method,
