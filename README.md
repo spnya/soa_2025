@@ -15,3 +15,13 @@
 4. **Stats Service** — подсчет просмотров, лайков, админка.  
 
 [](/docs/mermaid.png)
+
+
+# Set up
+```
+docker compose up --build
+```
+
+- [Kafka UI](http://localhost:9080/)
+- [Swagger](http://localhost:8000/api/docs/)
+

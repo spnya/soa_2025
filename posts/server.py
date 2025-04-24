@@ -7,6 +7,12 @@ import posts_pb2_grpc
 from posts_service import PostsService
 from models import init_db
 from config import Config
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 class PostServicer(posts_pb2_grpc.PostServiceServicer):
     def __init__(self, posts_service):
@@ -127,6 +133,77 @@ class PostServicer(posts_pb2_grpc.PostServiceServicer):
             page=result['page'],
             total_pages=result['total_pages']
         )
+    
+    # New methods that implement the gRPC service definitions
+    def ViewPost(self, request, context):
+        success, message = self.posts_service.view_post(
+            post_id=request.post_id,
+            user_id=request.user_id
+        )
+        
+        return posts_pb2.ViewPostResponse(
+            success=success,
+            message=message
+        )
+    
+    def LikePost(self, request, context):
+        success, message = self.posts_service.like_post(
+            post_id=request.post_id,
+            user_id=request.user_id
+        )
+        
+        return posts_pb2.LikePostResponse(
+            success=success,
+            message=message
+        )
+    
+    def CreateComment(self, request, context):
+        comment_data, error = self.posts_service.create_comment(
+            post_id=request.post_id,
+            user_id=request.user_id,
+            content=request.content
+        )
+        
+        if error:
+            return posts_pb2.CommentResponse(error=error)
+            
+        comment = posts_pb2.Comment(
+            id=comment_data['id'],
+            post_id=comment_data['post_id'],
+            user_id=comment_data['user_id'],
+            content=comment_data['content'],
+            created_at=comment_data['created_at']
+        )
+        
+        return posts_pb2.CommentResponse(comment=comment)
+    
+    def ListComments(self, request, context):
+        result, error = self.posts_service.list_comments(
+            post_id=request.post_id,
+            page=request.page,
+            per_page=request.per_page
+        )
+        
+        if error:
+            return posts_pb2.ListCommentsResponse()
+            
+        comments_proto = []
+        for comment_data in result['comments']:
+            comment = posts_pb2.Comment(
+                id=comment_data['id'],
+                post_id=comment_data['post_id'],
+                user_id=comment_data['user_id'],
+                content=comment_data['content'],
+                created_at=comment_data['created_at']
+            )
+            comments_proto.append(comment)
+            
+        return posts_pb2.ListCommentsResponse(
+            comments=comments_proto,
+            total_count=result['total_count'],
+            page=result['page'],
+            total_pages=result['total_pages']
+        )
 
 
 def serve():
@@ -141,13 +218,14 @@ def serve():
     server.add_insecure_port(f'[::]:{Config.GRPC_PORT}')
     server.start()
     
-    print(f"Posts gRPC server started on port {Config.GRPC_PORT}")
+    logging.info(f"Posts gRPC server started on port {Config.GRPC_PORT}")
     
     try:
         while True:
             time.sleep(86400)
     except KeyboardInterrupt:
         server.stop(0)
+        logging.info("Posts gRPC server stopped")
 
 
 if __name__ == '__main__':

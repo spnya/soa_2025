@@ -14,8 +14,8 @@ posts_blueprint = Blueprint('posts', __name__)
 class PostCreateSchema(Schema):
     title = fields.String(required=True, validate=validate.Length(min=1, max=255))
     description = fields.String(required=True)
-    is_private = fields.Boolean(missing=False)
-    tags = fields.List(fields.String(), missing=[])
+    is_private = fields.Boolean(load_default=False)
+    tags = fields.List(fields.String(), load_default=[])
 
 
 class PostUpdateSchema(Schema):
@@ -26,9 +26,18 @@ class PostUpdateSchema(Schema):
 
 
 class PaginationSchema(Schema):
-    page = fields.Integer(missing=1, validate=validate.Range(min=1))
-    per_page = fields.Integer(missing=10, validate=validate.Range(min=1, max=100))
-    tag = fields.String(missing=None)
+    page = fields.Integer(load_default=1, validate=validate.Range(min=1))
+    per_page = fields.Integer(load_default=10, validate=validate.Range(min=1, max=100))
+    tag = fields.String(load_default=None)
+
+
+class CommentCreateSchema(Schema):
+    content = fields.String(required=True, validate=validate.Length(min=1))
+
+
+class CommentPaginationSchema(Schema):
+    page = fields.Integer(load_default=1, validate=validate.Range(min=1))
+    per_page = fields.Integer(load_default=10, validate=validate.Range(min=1, max=100))
 
 
 def token_required(f):
@@ -256,6 +265,153 @@ def list_posts(user_id):
 
         result = {
             'posts': posts,
+            'total_count': response.total_count,
+            'page': response.page,
+            'total_pages': response.total_pages
+        }
+
+        return jsonify(result), 200
+
+    except ValidationError as err:
+        return jsonify({'error': 'Ошибка валидации', 'details': err.messages}), 400
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# New routes for views, likes, and comments
+
+@posts_blueprint.route('/posts/<int:post_id>/view', methods=['POST'])
+@token_required
+def view_post(user_id, post_id):
+    try:
+        stub = get_posts_stub()
+
+        request_proto = posts_pb2.ViewPostRequest(
+            post_id=post_id,
+            user_id=user_id
+        )
+
+        response = stub.ViewPost(request_proto)
+
+        if not response.success:
+            if "not found" in response.message:
+                return jsonify({'error': response.message}), 404
+            elif "Access denied" in response.message:
+                return jsonify({'error': response.message}), 403
+            else:
+                return jsonify({'error': response.message}), 400
+
+        return jsonify({'message': response.message}), 200
+
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@posts_blueprint.route('/posts/<int:post_id>/like', methods=['POST'])
+@token_required
+def like_post(user_id, post_id):
+    try:
+        stub = get_posts_stub()
+
+        request_proto = posts_pb2.LikePostRequest(
+            post_id=post_id,
+            user_id=user_id
+        )
+
+        response = stub.LikePost(request_proto)
+
+        if not response.success:
+            if "not found" in response.message:
+                return jsonify({'error': response.message}), 404
+            elif "Access denied" in response.message:
+                return jsonify({'error': response.message}), 403
+            else:
+                return jsonify({'error': response.message}), 400
+
+        return jsonify({'message': response.message}), 200
+
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@posts_blueprint.route('/posts/<int:post_id>/comments', methods=['POST'])
+@token_required
+def create_comment(user_id, post_id):
+    try:
+        schema = CommentCreateSchema()
+        data = schema.load(request.json)
+
+        stub = get_posts_stub()
+
+        request_proto = posts_pb2.CreateCommentRequest(
+            post_id=post_id,
+            user_id=user_id,
+            content=data['content']
+        )
+
+        response = stub.CreateComment(request_proto)
+
+        if response.error:
+            if "not found" in response.error:
+                return jsonify({'error': response.error}), 404
+            elif "Access denied" in response.error:
+                return jsonify({'error': response.error}), 403
+            else:
+                return jsonify({'error': response.error}), 400
+
+        comment = {
+            'id': response.comment.id,
+            'post_id': response.comment.post_id,
+            'user_id': response.comment.user_id,
+            'content': response.comment.content,
+            'created_at': response.comment.created_at
+        }
+
+        return jsonify(comment), 201
+
+    except ValidationError as err:
+        return jsonify({'error': 'Ошибка валидации', 'details': err.messages}), 400
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@posts_blueprint.route('/posts/<int:post_id>/comments', methods=['GET'])
+@token_required
+def list_comments(user_id, post_id):
+    try:
+        schema = CommentPaginationSchema()
+        params = schema.load(request.args)
+
+        stub = get_posts_stub()
+
+        request_proto = posts_pb2.ListCommentsRequest(
+            post_id=post_id,
+            page=params['page'],
+            per_page=params['per_page']
+        )
+
+        response = stub.ListComments(request_proto)
+
+        comments = []
+        for comment in response.comments:
+            comments.append({
+                'id': comment.id,
+                'post_id': comment.post_id,
+                'user_id': comment.user_id,
+                'content': comment.content,
+                'created_at': comment.created_at
+            })
+
+        result = {
+            'comments': comments,
             'total_count': response.total_count,
             'page': response.page,
             'total_pages': response.total_pages
