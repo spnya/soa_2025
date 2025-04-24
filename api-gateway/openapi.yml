@@ -345,6 +345,219 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+                
+  # New endpoints for post views, likes, and comments
+  /api/posts/{post_id}/view:
+    post:
+      tags:
+        - post-interactions
+      summary: Просмотр поста
+      description: Регистрация просмотра поста пользователем
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Просмотр успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Post viewed successfully"
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/posts/{post_id}/like:
+    post:
+      tags:
+        - post-interactions
+      summary: Лайк/дизлайк поста
+      description: Добавление или удаление лайка поста пользователем
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Лайк успешно добавлен или удален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Post liked successfully"
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/posts/{post_id}/comments:
+    post:
+      tags:
+        - comments
+      summary: Создание комментария
+      description: Добавление комментария к посту
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Комментарий успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Некорректный ввод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - comments
+      summary: Получение комментариев поста
+      description: Получение пагинированного списка комментариев к посту
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Номер страницы
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Количество комментариев на странице
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Список комментариев
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentList'
+        '400':
+          description: Некорректный ввод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пост не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
   securitySchemes:
@@ -559,6 +772,15 @@ components:
           type: string
           format: date-time
           example: '2023-03-29T12:00:00Z'
+        likes_count:
+          type: integer
+          example: 15
+        views_count:
+          type: integer
+          example: 42
+        comments_count:
+          type: integer
+          example: 5
 
     PostList:
       type: object
@@ -576,6 +798,54 @@ components:
         total_pages:
           type: integer
           example: 5
+
+    # New schemas for comments
+    CommentCreate:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          example: "This is a great post!"
+          minLength: 1
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        post_id:
+          type: integer
+          example: 5
+        user_id:
+          type: integer
+          example: 3
+        content:
+          type: string
+          example: "This is a great post!"
+        created_at:
+          type: string
+          format: date-time
+          example: '2023-03-29T14:30:00Z'
+
+    CommentList:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        total_count:
+          type: integer
+          example: 25
+        page:
+          type: integer
+          example: 1
+        total_pages:
+          type: integer
+          example: 3
 
     Error:
       type: object

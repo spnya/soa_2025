@@ -3,3 +3,4 @@ grpcio-tools
 protobuf
 sqlalchemy
 psycopg2-binary
+kafka-python

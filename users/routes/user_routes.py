@@ -6,8 +6,11 @@ from functools import wraps
 from models import User, db
 from config import Config
 from email_validator import validate_email, EmailNotValidError
+from kafka_producer import EventProducer
+import logging
 
 user_blueprint = Blueprint('users', __name__)
+event_producer = EventProducer(Config.KAFKA_BOOTSTRAP_SERVERS)
 
 
 class UserRegistrationSchema(Schema):
@@ -80,6 +83,12 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        # Send user registration event to Kafka
+        if event_producer.send_user_registration_event(new_user.id):
+            logging.info(f"User registration event sent for user_id: {new_user.id}")
+        else:
+            logging.error(f"Failed to send user registration event for user_id: {new_user.id}")
+
         return jsonify({
             'id': new_user.id,
             'username': new_user.username,
@@ -90,6 +99,7 @@ def register():
     except ValidationError as err:
         return jsonify({'error': 'Ошибка валидации', 'details': err.messages}), 400
     except Exception as e:
+        logging.error(f"Error during user registration: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -118,6 +128,7 @@ def login():
     except ValidationError as err:
         return jsonify({'error': 'Ошибка валидации', 'details': err.messages}), 400
     except Exception as e:
+        logging.error(f"Error during user login: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -158,4 +169,5 @@ def update_profile(current_user):
     except ValidationError as err:
         return jsonify({'error': 'Ошибка валидации', 'details': err.messages}), 400
     except Exception as e:
+        logging.error(f"Error during profile update: {str(e)}")
         return jsonify({'error': str(e)}), 500
