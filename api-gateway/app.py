@@ -5,6 +5,7 @@ from config import Config
 import yaml
 from flask_swagger_ui import get_swaggerui_blueprint
 from routes.posts_routes import posts_blueprint
+from routes.statistics_routes import statistics_blueprint
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -25,6 +26,7 @@ swaggerui_blueprint = get_swaggerui_blueprint(
 
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 app.register_blueprint(posts_blueprint, url_prefix='/api')
+app.register_blueprint(statistics_blueprint, url_prefix='/api/statistics')
 
 @app.route('/api/spec')
 def get_spec():
@@ -58,7 +60,12 @@ def home():
     return jsonify({
         "message": "API Gateway is running",
         "version": "1.0.0",
-        "swagger_docs": f"{request.url_root.rstrip('/')}{SWAGGER_URL}"
+        "swagger_docs": f"{request.url_root.rstrip('/')}{SWAGGER_URL}",
+        "available_services": [
+            "users",
+            "posts",
+            "statistics"
+        ]
     })
 
 if __name__ == '__main__':
