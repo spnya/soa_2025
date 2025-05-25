@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package statistics;
+
+// Сервис статистики
+service StatisticsService {
+    // 1. Получение общей статистики по посту
+    rpc GetPostStats(GetPostStatsRequest) returns (GetPostStatsResponse);
+    
+    // 2. Получение динамики просмотров по посту
+    rpc GetPostViewsDynamics(GetPostDynamicsRequest) returns (GetPostDynamicsResponse);
+    
+    // 3. Получение динамики лайков по посту
+    rpc GetPostLikesDynamics(GetPostDynamicsRequest) returns (GetPostDynamicsResponse);
+    
+    // 4. Получение динамики комментариев по посту
+    rpc GetPostCommentsDynamics(GetPostDynamicsRequest) returns (GetPostDynamicsResponse);
+    
+    // 5. Получение топ постов
+    rpc GetTopPosts(GetTopPostsRequest) returns (GetTopPostsResponse);
+    
+    // 6. Получение топ пользователей
+    rpc GetTopUsers(GetTopUsersRequest) returns (GetTopUsersResponse);
+}
+
+// Запрос общей статистики по посту
+message GetPostStatsRequest {
+    uint64 post_id = 1;
+}
+
+// Ответ с общей статистикой по посту
+message GetPostStatsResponse {
+    string error = 1;
+    PostStats stats = 2;
+}
+
+// Статистика поста
+message PostStats {
+    uint64 post_id = 1;
+    uint64 views = 2;
+    uint64 likes = 3;
+    uint64 comments = 4;
+}
+
+// Запрос динамики по посту
+message GetPostDynamicsRequest {
+    uint64 post_id = 1;
+    string start_date = 2; // YYYY-MM-DD
+    string end_date = 3;   // YYYY-MM-DD
+}
+
+// Ответ с динамикой
+message GetPostDynamicsResponse {
+    string error = 1;
+    repeated DayStats dynamics = 2;
+}
+
+// Статистика за день
+message DayStats {
+    string date = 1;   // YYYY-MM-DD
+    uint64 count = 2;
+}
+
+// Запрос топ постов
+message GetTopPostsRequest {
+    enum MetricType {
+        VIEWS = 0;
+        LIKES = 1;
+        COMMENTS = 2;
+    }
+    MetricType metric = 1;
+    uint32 limit = 2; // по умолчанию 10
+}
+
+// Ответ с топ постами
+message GetTopPostsResponse {
+    string error = 1;
+    repeated PostStats posts = 2;
+}
+
+// Запрос топ пользователей
+message GetTopUsersRequest {
+    enum MetricType {
+        VIEWS = 0;
+        LIKES = 1;
+        COMMENTS = 2;
+    }
+    MetricType metric = 1;
+    uint32 limit = 2; // по умолчанию 10
+}
+
+// Ответ с топ пользователями
+message GetTopUsersResponse {
+    string error = 1;
+    repeated UserStats users = 2;
+}
+
+// Статистика пользователя
+message UserStats {
+    uint64 user_id = 1;
+    uint64 views = 2;
+    uint64 likes = 3;
+    uint64 comments = 4;
+}

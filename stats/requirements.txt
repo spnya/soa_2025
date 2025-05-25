@@ -1,0 +1,14 @@
+flask
+kafka-python
+clickhouse-driver
+grpcio
+grpcio-tools
+protobuf
+marshmallow
+PyJWT
+flask-swagger-ui
+PyYAML
+pytest
+pytest-mock
+pytest-cov
+pytest-asyncio

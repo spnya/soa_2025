@@ -558,7 +558,281 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/statistics/posts/{post_id}/stats:
+    get:
+      tags:
+        - statistics
+      summary: Получение общей статистики поста
+      description: Получение количества просмотров, лайков и комментариев по посту
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Статистика поста
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostStats'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
+  /api/statistics/posts/{post_id}/dynamics/views:
+    get:
+      tags:
+        - statistics
+      summary: Динамика просмотров поста
+      description: Получение динамики просмотров по дням
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+        - name: start_date
+          in: query
+          description: Начальная дата (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2025-01-01"
+        - name: end_date
+          in: query
+          description: Конечная дата (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2025-05-25"
+      responses:
+        '200':
+          description: Динамика просмотров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDynamics'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/statistics/posts/{post_id}/dynamics/likes:
+    get:
+      tags:
+        - statistics
+      summary: Динамика лайков поста
+      description: Получение динамики лайков по дням
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+        - name: start_date
+          in: query
+          description: Начальная дата (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: Конечная дата (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Динамика лайков
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDynamics'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/statistics/posts/{post_id}/dynamics/comments:
+    get:
+      tags:
+        - statistics
+      summary: Динамика комментариев поста
+      description: Получение динамики комментариев по дням
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          description: ID поста
+          schema:
+            type: integer
+        - name: start_date
+          in: query
+          description: Начальная дата (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: Конечная дата (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Динамика комментариев
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDynamics'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/statistics/posts/top:
+    get:
+      tags:
+        - statistics
+      summary: Топ постов
+      description: Получение топ постов по метрике (просмотры, лайки или комментарии)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: metric
+          in: query
+          description: Метрика для сортировки
+          required: false
+          schema:
+            type: string
+            enum: [views, likes, comments]
+            default: views
+        - name: limit
+          in: query
+          description: Количество постов в топе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Топ постов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopPosts'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/statistics/users/top:
+    get:
+      tags:
+        - statistics
+      summary: Топ пользователей
+      description: Получение топ пользователей по метрике (просмотры, лайки или комментарии)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: metric
+          in: query
+          description: Метрика для сортировки
+          required: false
+          schema:
+            type: string
+            enum: [views, likes, comments]
+            default: views
+        - name: limit
+          in: query
+          description: Количество пользователей в топе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Топ пользователей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopUsers'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -856,3 +1130,90 @@ components:
         details:
           type: object
           example: {"title": "Это поле обязательно"}
+    PostStats:
+      type: object
+      properties:
+        post_id:
+          type: integer
+          example: 123
+        views:
+          type: integer
+          example: 542
+        likes:
+          type: integer
+          example: 89
+        comments:
+          type: integer
+          example: 23
+
+    PostDynamics:
+      type: object
+      properties:
+        post_id:
+          type: integer
+          example: 123
+        metric:
+          type: string
+          enum: [views, likes, comments]
+          example: views
+        dynamics:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayStats'
+
+    DayStats:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2025-05-25"
+        count:
+          type: integer
+          example: 42
+
+    TopPosts:
+      type: object
+      properties:
+        metric:
+          type: string
+          enum: [views, likes, comments]
+          example: views
+        limit:
+          type: integer
+          example: 10
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostStats'
+
+    TopUsers:
+      type: object
+      properties:
+        metric:
+          type: string
+          enum: [views, likes, comments]
+          example: likes
+        limit:
+          type: integer
+          example: 10
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserStats'
+
+    UserStats:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 45
+        views:
+          type: integer
+          example: 1205
+        likes:
+          type: integer
+          example: 156
+        comments:
+          type: integer
+          example: 78
