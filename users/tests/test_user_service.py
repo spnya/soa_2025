@@ -4,6 +4,7 @@ import os
 import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.environ['TESTING'] = '1'
 
 from app import app
 from models import db, User

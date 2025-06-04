@@ -8,7 +8,6 @@ import os
 # Add the parent directory to the path to import the modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
 @pytest.fixture
 def mock_clickhouse_client():
     """Fixture для мока ClickHouse клиента"""
